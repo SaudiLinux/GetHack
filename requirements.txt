@@ -1,0 +1,17 @@
+# GetHack - متطلبات التثبيت
+
+# المكتبات الأساسية
+requests>=2.25.1
+colorama>=0.4.4
+python-whois>=0.7.3
+dnspython>=2.1.0
+pymysql>=1.0.2
+paramiko>=2.7.2
+beautifulsoup4>=4.9.3
+lxml>=4.6.3
+tqdm>=4.61.0
+python-nmap>=0.7.1
+
+# متطلبات اختيارية (قد تحتاج إلى تثبيتها يدويًا على بعض الأنظمة)
+# pycrypto>=2.6.1
+# pyOpenSSL>=20.0.1
