@@ -1,17 +1,36 @@
 # GetHack - متطلبات التثبيت
 
 # المكتبات الأساسية
-requests>=2.25.1
-colorama>=0.4.4
-python-whois>=0.7.3
-dnspython>=2.1.0
-pymysql>=1.0.2
-paramiko>=2.7.2
-beautifulsoup4>=4.9.3
-lxml>=4.6.3
-tqdm>=4.61.0
+requests>=2.31.0
+colorama>=0.4.6
+python-whois>=0.8.0
+dnspython>=2.4.2
+PyMySQL>=1.1.0
+paramiko>=3.3.1
+beautifulsoup4>=4.12.2
+lxml>=4.9.3
+tqdm>=4.66.1
 python-nmap>=0.7.1
 
-# متطلبات اختيارية (قد تحتاج إلى تثبيتها يدويًا على بعض الأنظمة)
-# pycrypto>=2.6.1
-# pyOpenSSL>=20.0.1
+# مكتبات الأمان والتشفير
+cryptography>=41.0.5
+pyOpenSSL>=23.3.0
+
+# مكتبات تحليل البيانات
+pandas>=2.1.3
+numpy>=1.26.2
+
+# مكتبات التقارير والتصدير
+jinja2>=3.1.2
+markdown>=3.5.1
+pyyaml>=6.0.1
+
+# متطلبات التطوير
+black>=23.11.0
+flake8>=6.1.0
+pytest>=7.4.3
+
+# ملاحظات التثبيت:
+# 1. قم بتثبيت المكتبات باستخدام: pip install -r requirements.txt
+# 2. لتثبيت متطلبات التطوير: pip install -r requirements.txt[dev]
+# 3. تأكد من تثبيت Python 3.8 أو أحدث
