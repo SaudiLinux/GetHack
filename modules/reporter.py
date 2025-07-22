@@ -12,7 +12,27 @@ from datetime import datetime
 from colorama import Fore, Style
 
 class Reporter:
-    def __init__(self, target_info, open_ports=None, vulnerabilities=None, output_dir="reports"):
+    """صنف إنشاء وإدارة التقارير الأمنية
+    
+    Attributes:
+        target_info (dict): معلومات الهدف
+        open_ports (list): قائمة المنافذ المفتوحة
+        vulnerabilities (list): قائمة الثغرات المكتشفة
+        output_dir (str): مجلد حفظ التقارير
+        report_format (str): تنسيق التقرير ('txt', 'json', 'html')
+        timestamp (str): الطابع الزمني للتقرير
+        report_file (str): مسار ملف التقرير
+    """
+    def __init__(self, target_info, open_ports=None, vulnerabilities=None, output_dir="reports", report_format='txt'):
+        """تهيئة منشئ التقارير
+        Args:
+            target_info (dict): معلومات الهدف
+            open_ports (list, optional): قائمة المنافذ المفتوحة
+            vulnerabilities (list, optional): قائمة الثغرات المكتشفة
+            output_dir (str, optional): مجلد حفظ التقارير
+            report_format (str, optional): تنسيق التقرير ('txt', 'json', 'html')
+        """
+        self.report_format = report_format.lower()
         self.target_info = target_info
         self.open_ports = open_ports or []
         self.vulnerabilities = vulnerabilities or []
@@ -25,7 +45,15 @@ class Reporter:
             os.makedirs(output_dir)
     
     # إنشاء تقرير عن الثغرات المكتشفة
-    def generate_vulnerability_report(self, vulnerabilities, exploited_vulnerabilities=None):
+    def generate_vulnerability_report(self, vulnerabilities, exploited_vulnerabilities=None, report_format='txt'):
+        """إنشاء تقرير بالثغرات المكتشفة
+        Args:
+            vulnerabilities (list): قائمة الثغرات المكتشفة
+            exploited_vulnerabilities (list, optional): قائمة الثغرات المستغلة
+            report_format (str, optional): تنسيق التقرير ('txt' أو 'json' أو 'html')
+        Returns:
+            str: مسار ملف التقرير المنشأ
+        """
         print(f"{Fore.BLUE}[*] إنشاء تقرير عن الثغرات المكتشفة...{Style.RESET_ALL}")
         
         # استخدام اسم الملف المحدد أو إنشاء اسم ملف افتراضي
@@ -34,7 +62,13 @@ class Reporter:
             report_filename = f"{self.output_dir}/{target_name}_{self.timestamp}_report.txt"
             self.report_file = report_filename
         
-        # إنشاء محتوى التقرير
+        # تحديد تنسيق التقرير
+        if report_format.lower() == 'json':
+            return self.generate_json_report(vulnerabilities, exploited_vulnerabilities)
+        elif report_format.lower() == 'html':
+            return self.generate_html_report(vulnerabilities, exploited_vulnerabilities)
+        
+        # إنشاء محتوى التقرير النصي
         with open(self.report_file, 'w', encoding='utf-8-sig') as f:
             # كتابة رأس التقرير
             f.write("="*80 + "\n")
@@ -180,6 +214,15 @@ class Reporter:
     
     # إنشاء تقرير بتنسيق JSON
     def generate_json_report(self, vulnerabilities, exploited_vulnerabilities=None):
+        """إنشاء تقرير بتنسيق JSON
+        
+        Args:
+            vulnerabilities (list): قائمة الثغرات المكتشفة
+            exploited_vulnerabilities (list, optional): قائمة الثغرات المستغلة
+            
+        Returns:
+            str: مسار ملف التقرير JSON
+        """
         print(f"{Fore.BLUE}[*] إنشاء تقرير JSON...{Style.RESET_ALL}")
         
         # إنشاء اسم ملف التقرير
@@ -215,7 +258,179 @@ class Reporter:
         return json_filename
     
     # إنشاء توصيات أمان بناءً على الثغرات المكتشفة
+    def generate_html_report(self, vulnerabilities, exploited_vulnerabilities=None):
+        """إنشاء تقرير HTML تفاعلي
+        Args:
+            vulnerabilities (list): قائمة الثغرات المكتشفة
+            exploited_vulnerabilities (list, optional): قائمة الثغرات المستغلة
+        Returns:
+            str: مسار ملف التقرير HTML
+        """
+        print(f"{Fore.BLUE}[*] إنشاء تقرير HTML...{Style.RESET_ALL}")
+        
+        target_name = self.target_info['domain'] if self.target_info['domain'] else self.target_info['ip']
+        html_filename = f"{self.output_dir}/{target_name}_{self.timestamp}_report.html"
+        
+        # تصنيف الثغرات حسب مستوى الخطورة
+        high_severity = [v for v in vulnerabilities if v['severity'] == 'عالي']
+        medium_severity = [v for v in vulnerabilities if v['severity'] == 'متوسط']
+        low_severity = [v for v in vulnerabilities if v['severity'] == 'منخفض']
+        
+        # إنشاء محتوى HTML
+        html_content = f"""
+        <!DOCTYPE html>
+        <html dir="rtl" lang="ar">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>تقرير GetHack للثغرات الأمنية</title>
+            <style>
+                body {{ font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }}
+                .container {{ max-width: 1200px; margin: 0 auto; background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }}
+                h1, h2, h3 {{ color: #333; }}
+                .severity-high {{ color: #dc3545; }}
+                .severity-medium {{ color: #ffc107; }}
+                .severity-low {{ color: #28a745; }}
+                .vuln-details {{ margin: 10px 0; padding: 15px; border: 1px solid #ddd; border-radius: 4px; }}
+                .summary-box {{ background-color: #f8f9fa; padding: 15px; border-radius: 4px; margin-bottom: 20px; }}
+                .recommendations {{ background-color: #e9ecef; padding: 15px; border-radius: 4px; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>تقرير GetHack للثغرات الأمنية</h1>
+                <div class="summary-box">
+                    <h2>معلومات الهدف</h2>
+                    <p>الهدف: {self.target_info['target']}</p>
+                    <p>اسم النطاق: {self.target_info['domain'] if self.target_info['domain'] else 'غير متاح'}</p>
+                    <p>عنوان IP: {self.target_info['ip']}</p>
+                    <p>تاريخ الفحص: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
+                </div>
+                
+                <h2>ملخص الثغرات</h2>
+                <div class="summary-box">
+                    <p>إجمالي الثغرات المكتشفة: {len(vulnerabilities)}</p>
+                    <p class="severity-high">ثغرات عالية الخطورة: {len(high_severity)}</p>
+                    <p class="severity-medium">ثغرات متوسطة الخطورة: {len(medium_severity)}</p>
+                    <p class="severity-low">ثغرات منخفضة الخطورة: {len(low_severity)}</p>
+                </div>
+        """
+        
+        # إضافة تفاصيل الثغرات
+        if high_severity:
+            html_content += '<h2 class="severity-high">الثغرات عالية الخطورة</h2>'
+            for vuln in high_severity:
+                html_content += self._generate_vuln_html(vuln)
+        
+        if medium_severity:
+            html_content += '<h2 class="severity-medium">الثغرات متوسطة الخطورة</h2>'
+            for vuln in medium_severity:
+                html_content += self._generate_vuln_html(vuln)
+        
+        if low_severity:
+            html_content += '<h2 class="severity-low">الثغرات منخفضة الخطورة</h2>'
+            for vuln in low_severity:
+                html_content += self._generate_vuln_html(vuln)
+        
+        # إضافة الثغرات المستغلة
+        if exploited_vulnerabilities:
+            html_content += f"""
+                <h2>الثغرات المستغلة</h2>
+                <div class="summary-box">
+                    <p>إجمالي الثغرات المستغلة: {len(exploited_vulnerabilities)}</p>
+                </div>
+            """
+            for exploit in exploited_vulnerabilities:
+                html_content += self._generate_exploit_html(exploit)
+        
+        # إضافة التوصيات
+        recommendations = self.generate_security_recommendations(vulnerabilities)
+        html_content += f"""
+            <h2>توصيات الأمان</h2>
+            <div class="recommendations">
+                <ul>
+                    {''.join(f'<li>{rec}</li>' for rec in recommendations)}
+                </ul>
+            </div>
+            
+            <div style="margin-top: 30px; text-align: center; color: #666;">
+                <p>تم إنشاء هذا التقرير بواسطة أداة GetHack</p>
+                <p>المطور: SayerLinux (saudiSayer@gmail.com)</p>
+            </div>
+            </div>
+        </body>
+        </html>
+        """
+        
+        # كتابة التقرير إلى ملف HTML
+        with open(html_filename, 'w', encoding='utf-8') as f:
+            f.write(html_content)
+        
+        print(f"{Fore.GREEN}[+] تم إنشاء تقرير HTML بنجاح: {html_filename}{Style.RESET_ALL}")
+        return html_filename
+    
+    def _generate_vuln_html(self, vuln):
+        """إنشاء HTML لعرض تفاصيل ثغرة"""
+        return f"""
+            <div class="vuln-details">
+                <h3>{vuln['name']}</h3>
+                <p><strong>المسار:</strong> {vuln['path']}</p>
+                <p><strong>الوصف:</strong> {vuln['description']}</p>
+                <p><strong>تاريخ الاكتشاف:</strong> {vuln['timestamp']}</p>
+                {f'<p><strong>تفاصيل إضافية:</strong> {vuln["details"]}</p>' if 'details' in vuln and vuln['details'] else ''}
+            </div>
+        """
+    
+    def _generate_exploit_html(self, exploit):
+        """إنشاء HTML لعرض تفاصيل استغلال ثغرة"""
+        vuln = exploit['vulnerability']
+        result = exploit['result']
+        
+        result_html = ''
+        if isinstance(result, dict):
+            result_html = '<ul>'
+            for key, value in result.items():
+                if isinstance(value, list):
+                    result_html += f'<li>{key}:<ul>'
+                    result_html += ''.join(f'<li>{item}</li>' for item in value)
+                    result_html += '</ul></li>'
+                else:
+                    result_html += f'<li>{key}: {value}</li>'
+            result_html += '</ul>'
+        elif isinstance(result, list):
+            result_html = '<ul>'
+            for item in result:
+                if isinstance(item, dict):
+                    result_html += '<li><ul>'
+                    result_html += ''.join(f'<li>{k}: {v}</li>' for k, v in item.items())
+                    result_html += '</ul></li>'
+                else:
+                    result_html += f'<li>{item}</li>'
+            result_html += '</ul>'
+        else:
+            result_html = f'<p>{result}</p>'
+        
+        return f"""
+            <div class="vuln-details">
+                <h3>{vuln['name']}</h3>
+                <p><strong>المسار:</strong> {vuln['path']}</p>
+                <p><strong>الوصف:</strong> {vuln['description']}</p>
+                <div>
+                    <strong>نتيجة الاستغلال:</strong>
+                    {result_html}
+                </div>
+            </div>
+        """
+    
     def generate_security_recommendations(self, vulnerabilities):
+        """إنشاء توصيات أمان بناءً على الثغرات المكتشفة
+        
+        Args:
+            vulnerabilities (list): قائمة الثغرات المكتشفة
+            
+        Returns:
+            list: قائمة التوصيات الأمنية
+        """
         recommendations = [
             "قم بتحديث جميع البرامج والأنظمة بانتظام للحصول على أحدث إصلاحات الأمان.",
             "قم بتنفيذ جدار حماية لتقييد الوصول إلى الخدمات والمنافذ غير الضرورية.",
@@ -262,7 +477,13 @@ class Reporter:
         return recommendations
     
     # عرض ملخص التقرير في وحدة التحكم
-    def display_summary(self, vulnerabilities, exploited_vulnerabilities=None):
+    def display_summary(self, vulnerabilities, exploited_vulnerabilities=None, show_recommendations=True):
+        """عرض ملخص التقرير في وحدة التحكم
+        Args:
+            vulnerabilities (list): قائمة الثغرات المكتشفة
+            exploited_vulnerabilities (list, optional): قائمة الثغرات المستغلة
+            show_recommendations (bool, optional): عرض التوصيات الأمنية
+        """
         print("\n" + "="*80)
         print(f"{Fore.CYAN}ملخص نتائج الفحص:{Style.RESET_ALL}")
         print("-"*80)
@@ -294,5 +515,14 @@ class Reporter:
         # عرض مسار ملف التقرير
         if self.report_file:
             print(f"\n{Fore.CYAN}تم إنشاء التقرير في:{Style.RESET_ALL} {self.report_file}")
+        
+        print("="*80)
+        
+        # عرض التوصيات الأمنية
+        if show_recommendations:
+            print(f"\n{Fore.CYAN}التوصيات الأمنية:{Style.RESET_ALL}")
+            recommendations = self.generate_security_recommendations(vulnerabilities)
+            for i, rec in enumerate(recommendations, 1):
+                print(f"{i}. {rec}")
         
         print("="*80)
